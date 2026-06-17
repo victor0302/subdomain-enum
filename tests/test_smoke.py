@@ -1,3 +1,7 @@
+import json
+
+import pytest
+
 from subdomain_enum import __version__
 from subdomain_enum.cli import build_parser, main
 
@@ -6,12 +10,44 @@ def test_version():
     assert __version__ == "0.1.0"
 
 
-def test_parser_accepts_domain():
-    args = build_parser().parse_args(["example.com"])
+def test_parser_requires_subcommand():
+    with pytest.raises(SystemExit):
+        build_parser().parse_args([])
+
+
+def test_parser_enum_defaults():
+    args = build_parser().parse_args(["enum", "example.com"])
+    assert args.command == "enum"
     assert args.domain == "example.com"
+    assert args.concurrency == 50
+    assert args.timeout == 3.0
+    assert args.output == "text"
+    assert args.sources == "all"
 
 
-def test_main_returns_zero(capsys):
-    rc = main(["example.com"])
+def test_parser_enum_overrides():
+    args = build_parser().parse_args([
+        "enum", "example.com",
+        "-w", "words.txt",
+        "--concurrency", "100",
+        "--timeout", "1.5",
+        "--output", "json",
+        "--sources", "ct",
+    ])
+    assert args.wordlist == "words.txt"
+    assert args.concurrency == 100
+    assert args.timeout == 1.5
+    assert args.output == "json"
+    assert args.sources == "ct"
+
+
+def test_main_no_results_text(capsys):
+    rc = main(["enum", "example.com"])
     assert rc == 0
-    assert "subdomain-enum" in capsys.readouterr().out
+    assert "No subdomains found." in capsys.readouterr().out
+
+
+def test_main_no_results_json(capsys):
+    rc = main(["enum", "example.com", "--output", "json"])
+    assert rc == 0
+    assert json.loads(capsys.readouterr().out) == {"subdomains": []}
