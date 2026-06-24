@@ -3,6 +3,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
+
+from . import wordlist as wordlist_module
 
 OUTPUT_CHOICES: tuple[str, ...] = ("text", "json")
 SOURCE_CHOICES: tuple[str, ...] = ("dns", "ct", "all")
@@ -33,11 +36,18 @@ def _emit(findings: list[str], output: str) -> str:
     return "\n".join(findings)
 
 
-def run_enum(domain: str, _wordlist: str | None, _concurrency: int,
+def run_enum(domain: str, wordlist: str | None, _concurrency: int,
              _timeout: float, output: str, _sources: str) -> int:
     if not domain:
         print("error: domain is required", file=sys.stderr)
         return 2
+    try:
+        words = wordlist_module.load(Path(wordlist) if wordlist else None)
+    except FileNotFoundError as exc:
+        print(f"error: wordlist not found: {exc}", file=sys.stderr)
+        return 2
+    source = wordlist or "bundled default"
+    print(f"loaded {len(words)} words from {source}", file=sys.stderr)
     findings: list[str] = []
     print(_emit(findings, output))
     return 0
