@@ -21,6 +21,9 @@ subdomain-enum = "subdomain_enum.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"subdomain_enum.data" = ["*.txt"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
