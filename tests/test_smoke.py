@@ -41,13 +41,15 @@ def test_parser_enum_overrides():
     assert args.sources == "ct"
 
 
-def test_main_no_results_text(capsys):
-    rc = main(["enum", "example.com"])
+def test_dns_only_with_no_wordlist_yields_empty(capsys):
+    rc = main(["enum", "example.com", "--sources", "dns"])
     assert rc == 0
-    assert "No subdomains found." in capsys.readouterr().out
+    out = capsys.readouterr()
+    assert "No subdomains found." in out.out
+    assert "no wordlist" in out.err.lower()
 
 
-def test_main_no_results_json(capsys):
-    rc = main(["enum", "example.com", "--output", "json"])
+def test_dns_only_no_wordlist_json(capsys):
+    rc = main(["enum", "example.com", "--sources", "dns", "--output", "json"])
     assert rc == 0
-    assert json.loads(capsys.readouterr().out) == {"subdomains": []}
+    assert json.loads(capsys.readouterr().out) == []
